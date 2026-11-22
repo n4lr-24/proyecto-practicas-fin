@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('titulo', 'Nuevo usuario')
-@section('encabezado', 'Nuevo usuario')
+@section('encabezado', 'Práctica 1.2 (Nuevo usuario)')
 
 @section('contenido')
     <div class="max-w-xl bg-white border border-slate-200 rounded-xl shadow-sm p-6">

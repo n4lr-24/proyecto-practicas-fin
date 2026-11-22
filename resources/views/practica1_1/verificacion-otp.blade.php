@@ -9,6 +9,7 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 antialiased">
     <div class="w-full max-w-sm bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <div class="mb-5 text-center">
+            <p class="text-xs text-slate-400 mb-1">Práctica 1.1</p>
             <h1 class="text-xl font-semibold text-slate-900">Verificación</h1>
             <p class="text-sm text-slate-500 mt-1">
                 Ingresa el código enviado a <strong class="text-slate-700">{{ $usuario->email }}</strong>

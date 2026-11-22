@@ -8,6 +8,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 antialiased">
     <div class="w-full max-w-sm bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+        <p class="text-xs text-slate-400 text-center mb-1">Práctica 1.1</p>
         <h1 class="text-xl font-semibold text-slate-900 text-center mb-6">Login</h1>
 
         <x-alerta />

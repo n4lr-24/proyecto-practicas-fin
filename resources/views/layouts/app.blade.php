@@ -28,24 +28,27 @@
                 @if ($usuarioAuth && $usuarioAuth->esRol('administrador', 'empleado'))
                     <a href="{{ route('usuarios.index') }}"
                        class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('usuarios.index', 'usuarios.create', 'usuarios.show', 'usuarios.edit') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                        Usuarios
+                        1.2 Usuarios
                     </a>
                     @if ($usuarioAuth->esRol('administrador'))
                         <a href="{{ route('usuarios.papelera') }}"
                            class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('usuarios.papelera') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                            Papelera
+                            1.2 Papelera
                         </a>
                     @endif
-                    <a href="{{ route('articulos.index') }}"
-                       class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('articulos.*') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                        Productos
-                    </a>
                 @endif
 
                 @if ($usuarioAuth && $usuarioAuth->esRol('profesor', 'alumno'))
                     <a href="{{ route('calificaciones.index') }}"
                        class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('calificaciones.*') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                        Calificaciones
+                        1.3 Calificaciones
+                    </a>
+                @endif
+
+                @if ($usuarioAuth && $usuarioAuth->esRol('administrador', 'empleado'))
+                    <a href="{{ route('articulos.index') }}"
+                       class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('articulos.*') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                        1.4 Productos
                     </a>
                 @endif
             </nav>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('titulo', 'Papelera')
-@section('encabezado', 'Papelera')
+@section('encabezado', 'Práctica 1.2 (Papelera)')
 
 @section('contenido')
     <div class="flex items-center justify-between mb-5">

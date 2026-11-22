@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('titulo', 'Calificaciones')
-@section('encabezado', 'Calificaciones')
+@section('encabezado', 'Práctica 1.3 (Calificaciones)')
 
 @section('contenido')
     @php
