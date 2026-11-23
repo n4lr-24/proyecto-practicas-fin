@@ -47,6 +47,12 @@
                 Entrar
             </button>
         </form>
+
+        <div class="mt-4 text-center">
+            <a href="{{ route('registro.vista') }}" class="text-xs text-slate-500 hover:text-slate-800 underline">
+                Crear cuenta
+            </a>
+        </div>
     </div>
 </body>
 </html>

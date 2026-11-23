@@ -38,6 +38,26 @@ class User extends Authenticatable
         return $this->hasMany(CodigoOtp::class);
     }
 
+    public function solicitudesReserva(): HasMany
+    {
+        return $this->hasMany(SolicitudReserva::class);
+    }
+
+    public function salasComoX(): HasMany
+    {
+        return $this->hasMany(SalaJuego::class, 'retador_x_id');
+    }
+
+    public function salasComoO(): HasMany
+    {
+        return $this->hasMany(SalaJuego::class, 'retador_o_id');
+    }
+
+    public function jugadas(): HasMany
+    {
+        return $this->hasMany(Jugada::class);
+    }
+
     public function esRol(RolUsuario|string ...$roles): bool
     {
         $valores = array_map(

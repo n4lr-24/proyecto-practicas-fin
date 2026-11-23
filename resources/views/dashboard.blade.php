@@ -44,5 +44,27 @@
                 <h3 class="text-base font-semibold text-slate-900">Productos</h3>
             </a>
         @endif
+
+        @if ($usuario->esRol('administrador', 'estudiante'))
+            <a href="{{ route('equipos.index') }}" class="block bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-400 transition">
+                <p class="text-xs text-slate-400">Práctica 1.5</p>
+                <h3 class="text-base font-semibold text-slate-900">Equipos</h3>
+            </a>
+            <a href="{{ route('reservas.index') }}" class="block bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-400 transition">
+                <p class="text-xs text-slate-400">Práctica 1.5</p>
+                <h3 class="text-base font-semibold text-slate-900">Reservaciones</h3>
+            </a>
+        @endif
+
+        @if ($usuario->esRol('administrador', 'jugador'))
+            <a href="{{ route('gato.index') }}" class="block bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-400 transition">
+                <p class="text-xs text-slate-400">Práctica 1.6</p>
+                <h3 class="text-base font-semibold text-slate-900">Juego del Gato</h3>
+            </a>
+            <a href="{{ route('gato.historial') }}" class="block bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-400 transition">
+                <p class="text-xs text-slate-400">Práctica 1.6</p>
+                <h3 class="text-base font-semibold text-slate-900">Historial</h3>
+            </a>
+        @endif
     </div>
 @endsection

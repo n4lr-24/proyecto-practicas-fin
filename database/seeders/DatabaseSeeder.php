@@ -64,6 +64,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CalificacionSeeder::class,
             ArticuloSeeder::class,
+            ComputadoraSeeder::class,
         ]);
     }
 }

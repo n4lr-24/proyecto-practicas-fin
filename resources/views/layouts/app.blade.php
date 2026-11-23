@@ -51,6 +51,28 @@
                         1.4 Productos
                     </a>
                 @endif
+
+                @if ($usuarioAuth && $usuarioAuth->esRol('administrador', 'estudiante'))
+                    <a href="{{ route('equipos.index') }}"
+                       class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('equipos.*') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                        1.5 Equipos
+                    </a>
+                    <a href="{{ route('reservas.index') }}"
+                       class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('reservas.*') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                        1.5 Reservaciones
+                    </a>
+                @endif
+
+                @if ($usuarioAuth && $usuarioAuth->esRol('administrador', 'jugador'))
+                    <a href="{{ route('gato.index') }}"
+                       class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('gato.index', 'gato.show') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                        1.6 Juego del Gato
+                    </a>
+                    <a href="{{ route('gato.historial') }}"
+                       class="block px-3 py-2 rounded-lg font-medium {{ request()->routeIs('gato.historial') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                        1.6 Historial
+                    </a>
+                @endif
             </nav>
         </aside>
 

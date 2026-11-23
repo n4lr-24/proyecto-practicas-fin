@@ -17,3 +17,5 @@ require __DIR__.'/practica_1_1.php';
 require __DIR__.'/practica_1_2.php';
 require __DIR__.'/practica_1_3.php';
 require __DIR__.'/practica_1_4.php';
+require __DIR__.'/practica_1_5.php';
+require __DIR__.'/practica_1_6.php';
