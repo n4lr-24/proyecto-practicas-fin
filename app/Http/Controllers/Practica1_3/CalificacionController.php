@@ -21,7 +21,7 @@ class CalificacionController extends Controller
 
         $camposPermitidos = $esAlumno
             ? ['unidad', 'calificacion', 'inasistencias']
-            : ['estudiante_nombre', 'unidad', 'calificacion', 'inasistencias'];
+            : ['estudiante_nombre', 'calificacion', 'inasistencias'];
 
         $campoDefault = $esAlumno ? 'unidad' : 'estudiante_nombre';
 

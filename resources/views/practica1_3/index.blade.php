@@ -40,8 +40,9 @@
             <select name="ordenar" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-slate-900 focus:outline-none">
                 @if ($esProfesor)
                     <option value="estudiante_nombre" @selected($ordenar === 'estudiante_nombre')>Nombre</option>
+                @else
+                    <option value="unidad" @selected($ordenar === 'unidad')>Unidad</option>
                 @endif
-                <option value="unidad" @selected($ordenar === 'unidad')>Unidad</option>
                 <option value="calificacion" @selected($ordenar === 'calificacion')>Calificación</option>
                 <option value="inasistencias" @selected($ordenar === 'inasistencias')>Faltas</option>
             </select>
@@ -79,9 +80,13 @@
                             @endif
                         </th>
                         <th class="py-3 px-4">
-                            <a href="{{ $urlOrden('unidad') }}" class="hover:text-slate-900">
-                                Unidad{{ $flecha('unidad') }}
-                            </a>
+                            @if ($esProfesor)
+                                Unidad
+                            @else
+                                <a href="{{ $urlOrden('unidad') }}" class="hover:text-slate-900">
+                                    Unidad{{ $flecha('unidad') }}
+                                </a>
+                            @endif
                         </th>
                         <th class="py-3 px-4">
                             <a href="{{ $urlOrden('inasistencias') }}" class="hover:text-slate-900">
