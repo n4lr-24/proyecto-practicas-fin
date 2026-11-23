@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Calificacion extends Model
 {
+    public const UMBRAL_SA = 8.0;
+
+    public const UMBRAL_DE = 9.0;
+
+    public const UMBRAL_AU = 9.5;
+
     protected $table = 'calificaciones';
 
     protected $fillable = [
@@ -35,9 +41,9 @@ class Calificacion extends Model
     public static function obtenerEquivalencia(float $score): string
     {
         return match (true) {
-            $score < 8.0 => 'NA',
-            $score < 9.0 => 'SA',
-            $score < 9.5 => 'DE',
+            $score < self::UMBRAL_SA => 'NA',
+            $score < self::UMBRAL_DE => 'SA',
+            $score < self::UMBRAL_AU => 'DE',
             default => 'AU',
         };
     }

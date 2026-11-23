@@ -21,16 +21,26 @@
                        class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm focus:border-slate-900 focus:outline-none">
             </div>
 
+            @php
+                $esPropioNoAdmin = ! auth()->user()->esRol('administrador') && $usuario->id === auth()->id();
+            @endphp
+
             <div>
                 <label for="rol" class="block text-sm font-medium text-slate-700 mb-1">Rol</label>
-                <select id="rol" name="rol" required
-                        class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm bg-white focus:border-slate-900 focus:outline-none">
-                    @foreach ($roles as $rol)
-                        <option value="{{ $rol->value }}" @selected(old('rol', $usuario->rol->value) === $rol->value)>
-                            {{ $rol->etiqueta() }}
-                        </option>
-                    @endforeach
-                </select>
+                @if ($esPropioNoAdmin)
+                    <input type="hidden" name="rol" value="{{ $usuario->rol->value }}">
+                    <input type="text" value="{{ $usuario->rol->etiqueta() }}" disabled
+                           class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-500">
+                @else
+                    <select id="rol" name="rol" required
+                            class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm bg-white focus:border-slate-900 focus:outline-none">
+                        @foreach ($roles as $rol)
+                            <option value="{{ $rol->value }}" @selected(old('rol', $usuario->rol->value) === $rol->value)>
+                                {{ $rol->etiqueta() }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
 
             <div class="pt-2 border-t border-slate-200">

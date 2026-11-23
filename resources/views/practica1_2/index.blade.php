@@ -72,10 +72,12 @@
                                        class="px-2.5 py-1 rounded-md border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100">
                                         Ver
                                     </a>
-                                    <a href="{{ route('usuarios.edit', $item) }}"
-                                       class="px-2.5 py-1 rounded-md border border-sky-300 text-xs font-medium text-sky-700 hover:bg-sky-50">
-                                        Editar
-                                    </a>
+                                    @if ($esAdmin || ! $item->esRol('administrador'))
+                                        <a href="{{ route('usuarios.edit', $item) }}"
+                                           class="px-2.5 py-1 rounded-md border border-sky-300 text-xs font-medium text-sky-700 hover:bg-sky-50">
+                                            Editar
+                                        </a>
+                                    @endif
 
                                     @if ($esAdmin && $item->id !== auth()->id())
                                         <form method="POST" action="{{ route('usuarios.destroy', $item) }}"

@@ -12,12 +12,14 @@ class CodigoOtp extends Model
     protected $fillable = [
         'user_id',
         'codigo',
+        'intentos',
         'expira_en',
     ];
 
     protected function casts(): array
     {
         return [
+            'intentos' => 'integer',
             'expira_en' => 'datetime',
         ];
     }

@@ -36,23 +36,48 @@ class ArticuloController extends Controller
         $precioMax = $request->query('precio_max');
         $disponibilidad = $request->query('disponibilidad');
 
-        $articulos = Articulo::query()
-            ->with('rubro')
-            ->when($buscar !== '', function ($query) use ($buscar) {
-                $query->whereRaw('LOWER(titulo) LIKE ?', ['%'.mb_strtolower($buscar).'%']);
-            })
-            ->when($rubroId !== null && $rubroId !== '', function ($query) use ($rubroId) {
-                $query->where('rubro_id', (int) $rubroId);
-            })
-            ->when($precioMin !== null && $precioMin !== '' && is_numeric($precioMin), function ($query) use ($precioMin) {
-                $query->where('precio', '>=', (float) $precioMin);
-            })
-            ->when($precioMax !== null && $precioMax !== '' && is_numeric($precioMax), function ($query) use ($precioMax) {
-                $query->where('precio', '<=', (float) $precioMax);
-            })
-            ->when(in_array($disponibilidad, ['Disponible', 'Agotado'], true), function ($query) use ($disponibilidad) {
-                $query->where('disponibilidad', $disponibilidad);
-            })
+        $errorRangoPrecio = null;
+        $rangoInvalido = false;
+
+        if ($precioMin !== null && $precioMin !== '' && (! is_numeric($precioMin) || (float) $precioMin < 0)) {
+            $errorRangoPrecio = 'El precio mínimo debe ser un número mayor o igual a cero.';
+            $rangoInvalido = true;
+        } elseif ($precioMax !== null && $precioMax !== '' && (! is_numeric($precioMax) || (float) $precioMax < 0)) {
+            $errorRangoPrecio = 'El precio máximo debe ser un número mayor o igual a cero.';
+            $rangoInvalido = true;
+        } elseif (
+            $precioMin !== null && $precioMin !== ''
+            && $precioMax !== null && $precioMax !== ''
+            && (float) $precioMin > (float) $precioMax
+        ) {
+            $errorRangoPrecio = 'El precio mínimo no puede ser mayor que el precio máximo.';
+            $rangoInvalido = true;
+        }
+
+        $consulta = Articulo::query()->with('rubro');
+
+        if ($rangoInvalido) {
+            $consulta->whereRaw('1 = 0');
+        } else {
+            $consulta
+                ->when($buscar !== '', function ($query) use ($buscar) {
+                    $query->whereRaw('LOWER(titulo) LIKE ?', ['%'.mb_strtolower($buscar).'%']);
+                })
+                ->when($rubroId !== null && $rubroId !== '', function ($query) use ($rubroId) {
+                    $query->where('rubro_id', (int) $rubroId);
+                })
+                ->when($precioMin !== null && $precioMin !== '' && is_numeric($precioMin), function ($query) use ($precioMin) {
+                    $query->where('precio', '>=', (float) $precioMin);
+                })
+                ->when($precioMax !== null && $precioMax !== '' && is_numeric($precioMax), function ($query) use ($precioMax) {
+                    $query->where('precio', '<=', (float) $precioMax);
+                })
+                ->when(in_array($disponibilidad, ['Disponible', 'Agotado'], true), function ($query) use ($disponibilidad) {
+                    $query->where('disponibilidad', $disponibilidad);
+                });
+        }
+
+        $articulos = $consulta
             ->orderBy($ordenar, $direccion)
             ->paginate($porPagina)
             ->withQueryString();
@@ -65,7 +90,8 @@ class ArticuloController extends Controller
             'opcionesPaginacion',
             'porPagina',
             'ordenar',
-            'direccion'
+            'direccion',
+            'errorRangoPrecio'
         ));
     }
 

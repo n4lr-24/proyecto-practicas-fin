@@ -15,6 +15,10 @@ use Illuminate\View\View;
 
 class SalaJuegoController extends Controller
 {
+    private const MAX_SALAS_ACTIVAS = 3;
+
+    private const MINUTOS_EXPIRACION_ESPERA = 15;
+
     private const LINEAS_GANADORAS = [
         [0, 1, 2],
         [3, 4, 5],
@@ -28,6 +32,8 @@ class SalaJuegoController extends Controller
 
     public function index(Request $request): View
     {
+        $this->expirarSalasEnEspera();
+
         $usuario = $request->user();
         $esAdmin = $usuario->esRol('administrador');
 
@@ -59,6 +65,8 @@ class SalaJuegoController extends Controller
 
     public function historial(Request $request): View
     {
+        $this->expirarSalasEnEspera();
+
         $usuario = $request->user();
         $esAdmin = $usuario->esRol('administrador');
 
@@ -77,8 +85,26 @@ class SalaJuegoController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->expirarSalasEnEspera();
+
+        $usuario = $request->user();
+
+        $tieneEnEspera = SalaJuego::where('retador_x_id', $usuario->id)
+            ->where('estado', 'esperando')
+            ->exists();
+
+        if ($tieneEnEspera) {
+            return redirect()->route('gato.index')
+                ->with('error', 'Ya tienes una partida en espera de rival.');
+        }
+
+        if ($this->contarSalasActivas($usuario->id) >= self::MAX_SALAS_ACTIVAS) {
+            return redirect()->route('gato.index')
+                ->with('error', 'Alcanzaste el límite máximo de 3 partidas activas simultáneas.');
+        }
+
         $sala = SalaJuego::create([
-            'retador_x_id' => $request->user()->id,
+            'retador_x_id' => $usuario->id,
             'retador_o_id' => null,
             'turno' => 'X',
             'casillas' => array_fill(0, 9, null),
@@ -92,7 +118,14 @@ class SalaJuegoController extends Controller
 
     public function entrar(Request $request, SalaJuego $sala): RedirectResponse
     {
+        $this->expirarSalasEnEspera();
+
         $usuario = $request->user();
+
+        if ($this->contarSalasActivas($usuario->id) >= self::MAX_SALAS_ACTIVAS) {
+            return redirect()->route('gato.index')
+                ->with('error', 'Alcanzaste el límite máximo de 3 partidas activas simultáneas.');
+        }
 
         $resultado = DB::transaction(function () use ($sala, $usuario) {
             $salaBloqueada = SalaJuego::whereKey($sala->id)
@@ -130,6 +163,9 @@ class SalaJuegoController extends Controller
 
     public function show(Request $request, SalaJuego $sala): View
     {
+        $this->expirarSalasEnEspera();
+        $sala->refresh();
+
         $usuario = $request->user();
 
         if (! $usuario->esRol('administrador') && ! $sala->esParticipante($usuario->id)) {
@@ -143,6 +179,9 @@ class SalaJuegoController extends Controller
 
     public function estado(Request $request, SalaJuego $sala): JsonResponse
     {
+        $this->expirarSalasEnEspera();
+        $sala->refresh();
+
         $usuario = $request->user();
 
         if (! $usuario->esRol('administrador') && ! $sala->esParticipante($usuario->id)) {
@@ -352,5 +391,25 @@ class SalaJuegoController extends Controller
         }
 
         return false;
+    }
+
+    private function contarSalasActivas(int $userId): int
+    {
+        return SalaJuego::whereIn('estado', ['esperando', 'en_curso'])
+            ->where(function ($query) use ($userId) {
+                $query->where('retador_x_id', $userId)
+                    ->orWhere('retador_o_id', $userId);
+            })
+            ->count();
+    }
+
+    private function expirarSalasEnEspera(): void
+    {
+        SalaJuego::where('estado', 'esperando')
+            ->where('created_at', '<', now()->subMinutes(self::MINUTOS_EXPIRACION_ESPERA))
+            ->update([
+                'estado' => 'cancelada',
+                'ganador_id' => null,
+            ]);
     }
 }

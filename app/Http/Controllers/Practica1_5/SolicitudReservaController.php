@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Practica1_5;
 use App\Http\Controllers\Controller;
 use App\Models\Computadora;
 use App\Models\SolicitudReserva;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,10 @@ use Illuminate\View\View;
 
 class SolicitudReservaController extends Controller
 {
+    private const DURACION_MIN_MINUTOS = 30;
+
+    private const DURACION_MAX_MINUTOS = 240;
+
     public function index(Request $request): View
     {
         $usuario = $request->user();
@@ -59,6 +64,21 @@ class SolicitudReservaController extends Controller
             'fin.after' => 'La hora de fin debe ser posterior a la hora de inicio.',
         ]);
 
+        $inicioDt = Carbon::createFromFormat('Y-m-d H:i', "{$datos['fecha']} {$datos['inicio']}");
+        $finDt = Carbon::createFromFormat('Y-m-d H:i', "{$datos['fecha']} {$datos['fin']}");
+
+        if ($inicioDt->lt(now())) {
+            return redirect()->route('equipos.index')
+                ->with('error', 'No puedes reservar en una fecha u horario que ya pasó.');
+        }
+
+        $duracionMinutos = $inicioDt->diffInMinutes($finDt);
+
+        if ($duracionMinutos < self::DURACION_MIN_MINUTOS || $duracionMinutos > self::DURACION_MAX_MINUTOS) {
+            return redirect()->route('equipos.index')
+                ->with('error', 'La reservación debe durar entre 30 minutos y 4 horas.');
+        }
+
         $usuario = $request->user();
 
         $resultado = DB::transaction(function () use ($datos, $usuario) {
@@ -66,15 +86,22 @@ class SolicitudReservaController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $tieneReservaActiva = SolicitudReserva::where('computadora_id', $computadora->id)
-                ->where('estado', 'Activa')
-                ->exists();
-
-            if ($computadora->estado !== 'Disponible' || $tieneReservaActiva) {
-                return null;
+            if ($computadora->estado === 'Mantenimiento') {
+                return 'mantenimiento';
             }
 
-            $reserva = SolicitudReserva::create([
+            $solapada = SolicitudReserva::where('computadora_id', $computadora->id)
+                ->where('estado', 'Activa')
+                ->whereDate('fecha', $datos['fecha'])
+                ->where('inicio', '<', $datos['fin'])
+                ->where('fin', '>', $datos['inicio'])
+                ->exists();
+
+            if ($solapada) {
+                return 'solapada';
+            }
+
+            SolicitudReserva::create([
                 'user_id' => $usuario->id,
                 'computadora_id' => $computadora->id,
                 'fecha' => $datos['fecha'],
@@ -85,12 +112,17 @@ class SolicitudReservaController extends Controller
 
             $computadora->update(['estado' => 'Reservado']);
 
-            return $reserva;
+            return 'ok';
         });
 
-        if (! $resultado) {
+        if ($resultado === 'mantenimiento') {
             return redirect()->route('equipos.index')
-                ->with('error', 'Este equipo ya no está disponible porque fue reservado.');
+                ->with('error', 'Este equipo está en mantenimiento y no se puede reservar.');
+        }
+
+        if ($resultado === 'solapada') {
+            return redirect()->route('equipos.index')
+                ->with('error', 'Este equipo ya tiene una reservación activa en ese horario.');
         }
 
         return redirect()->route('reservas.index')
@@ -105,13 +137,19 @@ class SolicitudReservaController extends Controller
             abort(403, 'No tienes permiso para cancelar reservaciones de otro usuario.');
         }
 
-        $cancelada = DB::transaction(function () use ($reserva) {
+        $resultado = DB::transaction(function () use ($reserva, $usuario) {
             $reservaBloqueada = SolicitudReserva::whereKey($reserva->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
             if ($reservaBloqueada->estado !== 'Activa') {
-                return false;
+                return 'inactiva';
+            }
+
+            $inicioDt = Carbon::parse($reservaBloqueada->fecha->format('Y-m-d').' '.$reservaBloqueada->inicio);
+
+            if ($usuario->esRol('estudiante') && $inicioDt->lte(now())) {
+                return 'iniciada';
             }
 
             $computadora = Computadora::whereKey($reservaBloqueada->computadora_id)
@@ -130,14 +168,18 @@ class SolicitudReservaController extends Controller
                 }
             }
 
-            return true;
+            return 'ok';
         });
 
-        if (! $cancelada) {
+        if ($resultado === 'inactiva') {
             return back()->with('error', 'Solo se pueden cancelar reservaciones activas.');
         }
 
+        if ($resultado === 'iniciada') {
+            return back()->with('error', 'No puedes cancelar una reservación que ya inició o finalizó.');
+        }
+
         return redirect()->route('reservas.index')
-            ->with('exito', 'Reservación cancelada y equipo liberado.');
+            ->with('exito', 'Reservación cancelada correctamente.');
     }
 }

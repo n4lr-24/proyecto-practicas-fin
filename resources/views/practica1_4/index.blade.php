@@ -92,6 +92,12 @@
         </div>
     </form>
 
+    @if (! empty($errorRangoPrecio))
+        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {{ $errorRangoPrecio }}
+        </div>
+    @endif
+
     <div class="flex items-center justify-between text-xs text-slate-500 mb-3">
         <span>Total encontrados: <strong class="text-slate-800">{{ $articulos->total() }}</strong></span>
         <span>Página <strong class="text-slate-800">{{ $articulos->currentPage() }}</strong> de {{ $articulos->lastPage() }}</span>

@@ -6,6 +6,7 @@ use App\Enums\RolUsuario;
 use App\Http\Controllers\Controller;
 use App\Models\Calificacion;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -102,14 +103,20 @@ class CalificacionController extends Controller
                 ->withInput();
         }
 
-        Calificacion::create([
-            'alumno_user_id' => $alumno->id,
-            'estudiante_nombre' => $alumno->name,
-            'unidad' => (int) $datos['unidad'],
-            'inasistencias' => (int) $datos['inasistencias'],
-            'calificacion' => $datos['calificacion'],
-            'equivalencia' => Calificacion::obtenerEquivalencia((float) $datos['calificacion']),
-        ]);
+        try {
+            Calificacion::create([
+                'alumno_user_id' => $alumno->id,
+                'estudiante_nombre' => $alumno->name,
+                'unidad' => (int) $datos['unidad'],
+                'inasistencias' => (int) $datos['inasistencias'],
+                'calificacion' => $datos['calificacion'],
+                'equivalencia' => Calificacion::obtenerEquivalencia((float) $datos['calificacion']),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return back()
+                ->withErrors(['unidad' => "{$alumno->name} ya tiene calificación registrada en la Unidad {$datos['unidad']}."])
+                ->withInput();
+        }
 
         return redirect()->route('calificaciones.index')
             ->with('exito', 'Registro académico guardado correctamente.');
@@ -159,14 +166,20 @@ class CalificacionController extends Controller
                 ->withInput();
         }
 
-        $calificacion->update([
-            'alumno_user_id' => $alumno->id,
-            'estudiante_nombre' => $alumno->name,
-            'unidad' => (int) $datos['unidad'],
-            'inasistencias' => (int) $datos['inasistencias'],
-            'calificacion' => $datos['calificacion'],
-            'equivalencia' => Calificacion::obtenerEquivalencia((float) $datos['calificacion']),
-        ]);
+        try {
+            $calificacion->update([
+                'alumno_user_id' => $alumno->id,
+                'estudiante_nombre' => $alumno->name,
+                'unidad' => (int) $datos['unidad'],
+                'inasistencias' => (int) $datos['inasistencias'],
+                'calificacion' => $datos['calificacion'],
+                'equivalencia' => Calificacion::obtenerEquivalencia((float) $datos['calificacion']),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return back()
+                ->withErrors(['unidad' => "{$alumno->name} ya tiene calificación registrada en la Unidad {$datos['unidad']}."])
+                ->withInput();
+        }
 
         return redirect()->route('calificaciones.index')
             ->with('exito', 'Registro académico actualizado correctamente.');

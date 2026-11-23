@@ -7,6 +7,7 @@
     @php
         $esAdmin = auth()->user()->esRol('administrador');
         $esEstudiante = auth()->user()->esRol('estudiante');
+        $fechaDefault = now()->addDay()->format('Y-m-d');
     @endphp
 
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -55,14 +56,21 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {{ $claseEstado }}">
                                     {{ $pc->estado }}
                                 </span>
+                                @if ($pc->solicitudesReserva->isNotEmpty())
+                                    <div class="mt-1 space-y-0.5 text-[11px] text-slate-500">
+                                        @foreach ($pc->solicitudesReserva->take(3) as $res)
+                                            <p>{{ $res->fecha->format('d/m') }} {{ substr($res->inicio, 0, 5) }}-{{ substr($res->fin, 0, 5) }}</p>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </td>
                             <td class="py-3 px-4">
                                 <div class="flex items-center justify-end gap-2 flex-wrap">
-                                    @if ($esEstudiante && $pc->estado === 'Disponible')
+                                    @if ($esEstudiante && $pc->estado !== 'Mantenimiento')
                                         <form method="POST" action="{{ route('reservas.store') }}" class="flex flex-wrap items-center justify-end gap-1.5">
                                             @csrf
                                             <input type="hidden" name="computadora_id" value="{{ $pc->id }}">
-                                            <input type="date" name="fecha" value="{{ now()->format('Y-m-d') }}" min="{{ now()->format('Y-m-d') }}" required
+                                            <input type="date" name="fecha" value="{{ $fechaDefault }}" min="{{ now()->format('Y-m-d') }}" required
                                                    class="rounded-md border border-slate-300 px-2 py-1 text-xs focus:border-slate-900 focus:outline-none">
                                             <input type="time" name="inicio" value="09:00" required
                                                    class="rounded-md border border-slate-300 px-2 py-1 text-xs focus:border-slate-900 focus:outline-none">
@@ -74,7 +82,7 @@
                                             </button>
                                         </form>
                                     @elseif ($esEstudiante)
-                                        <span class="text-xs text-slate-400">No disponible</span>
+                                        <span class="text-xs text-slate-400">En mantenimiento</span>
                                     @endif
 
                                     @if ($esAdmin)

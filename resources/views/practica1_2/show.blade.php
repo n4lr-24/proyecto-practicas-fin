@@ -37,10 +37,12 @@
         </dl>
 
         <div class="pt-4 border-t border-slate-200 flex flex-wrap items-center gap-2">
-            <a href="{{ route('usuarios.edit', $usuario) }}"
-               class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
-                Editar
-            </a>
+            @if ($esAdmin || ! $usuario->esRol('administrador'))
+                <a href="{{ route('usuarios.edit', $usuario) }}"
+                   class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
+                    Editar
+                </a>
+            @endif
 
             @if ($esAdmin && $usuario->id !== auth()->id())
                 <form method="POST" action="{{ route('usuarios.destroy', $usuario) }}"

@@ -13,7 +13,14 @@ class ComputadoraController extends Controller
 {
     public function index(): View
     {
-        $computadoras = Computadora::orderBy('clave_equipo')->get();
+        $computadoras = Computadora::with([
+            'solicitudesReserva' => function ($query) {
+                $query->where('estado', 'Activa')
+                    ->whereDate('fecha', '>=', now()->toDateString())
+                    ->orderBy('fecha')
+                    ->orderBy('inicio');
+            },
+        ])->orderBy('clave_equipo')->get();
 
         return view('practica1_5.equipos.index', compact('computadoras'));
     }
@@ -68,6 +75,22 @@ class ComputadoraController extends Controller
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
+        $tieneReservasActivas = $computadora->solicitudesReserva()
+            ->where('estado', 'Activa')
+            ->exists();
+
+        if ($tieneReservasActivas && $datos['estado'] !== 'Reservado') {
+            return back()
+                ->withErrors(['estado' => 'Este equipo tiene reservaciones activas. Cancélalas antes de cambiar su estado.'])
+                ->withInput();
+        }
+
+        if (! $tieneReservasActivas && $datos['estado'] === 'Reservado') {
+            return back()
+                ->withErrors(['estado' => 'No puedes marcar manualmente como Reservado un equipo sin reservaciones activas.'])
+                ->withInput();
+        }
+
         $computadora->update($datos);
 
         return redirect()->route('equipos.index')
@@ -76,6 +99,14 @@ class ComputadoraController extends Controller
 
     public function destroy(Computadora $computadora): RedirectResponse
     {
+        $tieneReservasActivas = $computadora->solicitudesReserva()
+            ->where('estado', 'Activa')
+            ->exists();
+
+        if ($tieneReservasActivas) {
+            return back()->with('error', 'No puedes eliminar un equipo que tiene reservaciones activas.');
+        }
+
         $computadora->delete();
 
         return redirect()->route('equipos.index')

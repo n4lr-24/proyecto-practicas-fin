@@ -21,20 +21,28 @@ class UsuarioController extends Controller
         return view('practica1_2.index', compact('usuarios', 'totalEliminados'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $roles = RolUsuario::cases();
+        $roles = $this->rolesPermitidosPara($request->user());
 
         return view('practica1_2.create', compact('roles'));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $actor = $request->user();
+
+        if (! $actor->esRol(RolUsuario::ADMINISTRADOR) && $request->input('rol') === RolUsuario::ADMINISTRADOR->value) {
+            abort(403, 'No tienes permisos para asignar el rol de Administrador.');
+        }
+
+        $valoresPermitidos = array_map(fn (RolUsuario $r) => $r->value, $this->rolesPermitidosPara($actor));
+
         $datos = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'rol' => ['required', Rule::in(RolUsuario::valores())],
+            'rol' => ['required', Rule::in($valoresPermitidos)],
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
@@ -44,7 +52,7 @@ class UsuarioController extends Controller
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
             'rol.required' => 'Selecciona un rol.',
-            'rol.in' => 'El rol seleccionado no es válido.',
+            'rol.in' => 'No tienes permisos para asignar el rol seleccionado.',
         ]);
 
         User::create([
@@ -63,20 +71,44 @@ class UsuarioController extends Controller
         return view('practica1_2.show', compact('usuario'));
     }
 
-    public function edit(User $usuario): View
+    public function edit(Request $request, User $usuario): View
     {
-        $roles = RolUsuario::cases();
+        $actor = $request->user();
+
+        if (! $actor->esRol(RolUsuario::ADMINISTRADOR) && $usuario->esRol(RolUsuario::ADMINISTRADOR)) {
+            abort(403, 'No tienes permisos para editar cuentas de Administrador.');
+        }
+
+        $roles = $this->rolesPermitidosPara($actor);
 
         return view('practica1_2.edit', compact('usuario', 'roles'));
     }
 
     public function update(Request $request, User $usuario): RedirectResponse
     {
+        $actor = $request->user();
+
+        if (! $actor->esRol(RolUsuario::ADMINISTRADOR)) {
+            if ($usuario->esRol(RolUsuario::ADMINISTRADOR)) {
+                abort(403, 'No tienes permisos para modificar cuentas de Administrador.');
+            }
+
+            if ($request->input('rol') === RolUsuario::ADMINISTRADOR->value) {
+                abort(403, 'No tienes permisos para asignar el rol de Administrador.');
+            }
+
+            if ($usuario->id === $actor->id && $request->input('rol') !== $actor->rol->value) {
+                abort(403, 'No puedes cambiar tu propio rol.');
+            }
+        }
+
+        $valoresPermitidos = array_map(fn (RolUsuario $r) => $r->value, $this->rolesPermitidosPara($actor));
+
         $datos = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')->ignore($usuario->id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'rol' => ['required', Rule::in(RolUsuario::valores())],
+            'rol' => ['required', Rule::in($valoresPermitidos)],
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
@@ -85,7 +117,7 @@ class UsuarioController extends Controller
             'password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
             'rol.required' => 'Selecciona un rol.',
-            'rol.in' => 'El rol seleccionado no es válido.',
+            'rol.in' => 'No tienes permisos para asignar el rol seleccionado.',
         ]);
 
         $actualizacion = [
@@ -147,5 +179,17 @@ class UsuarioController extends Controller
         return redirect()
             ->route($estabaEnPapelera ? 'usuarios.papelera' : 'usuarios.index')
             ->with('exito', "Usuario \"{$nombre}\" eliminado permanentemente de la base de datos.");
+    }
+
+    private function rolesPermitidosPara(User $actor): array
+    {
+        if ($actor->esRol(RolUsuario::ADMINISTRADOR)) {
+            return RolUsuario::cases();
+        }
+
+        return array_values(array_filter(
+            RolUsuario::cases(),
+            fn (RolUsuario $rol) => $rol !== RolUsuario::ADMINISTRADOR
+        ));
     }
 }
