@@ -12,6 +12,7 @@ class Calificacion extends Model
     protected $fillable = [
         'alumno_user_id',
         'estudiante_nombre',
+        'unidad',
         'inasistencias',
         'calificacion',
         'equivalencia',
@@ -20,6 +21,7 @@ class Calificacion extends Model
     protected function casts(): array
     {
         return [
+            'unidad' => 'integer',
             'inasistencias' => 'integer',
             'calificacion' => 'decimal:2',
         ];

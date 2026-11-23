@@ -7,13 +7,14 @@
     @php
         $esProfesor = auth()->user()->esRol('profesor');
 
-        $urlOrden = function (string $campo) use ($ordenar, $direccion) {
+        $urlOrden = function (string $campo) use ($ordenar, $direccion, $unidadFiltro) {
             $nuevaDireccion = ($ordenar === $campo && $direccion === 'asc') ? 'desc' : 'asc';
 
-            return route('calificaciones.index', [
+            return route('calificaciones.index', array_filter([
                 'ordenar' => $campo,
                 'direccion' => $nuevaDireccion,
-            ]);
+                'unidad' => $unidadFiltro,
+            ], fn ($v) => $v !== null && $v !== ''));
         };
 
         $flecha = function (string $campo) use ($ordenar, $direccion) {
@@ -27,15 +28,27 @@
 
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <form method="GET" action="{{ route('calificaciones.index') }}" class="flex flex-wrap items-center gap-2">
+            @if ($esProfesor)
+                <select name="unidad" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-slate-900 focus:outline-none">
+                    <option value="">Todas las unidades</option>
+                    @foreach ([1, 2, 3, 4] as $u)
+                        <option value="{{ $u }}" @selected($unidadFiltro === $u)>Unidad {{ $u }}</option>
+                    @endforeach
+                </select>
+            @endif
+
             <select name="ordenar" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-slate-900 focus:outline-none">
-                <option value="estudiante_nombre" @selected($ordenar === 'estudiante_nombre')>Nombre</option>
+                @if ($esProfesor)
+                    <option value="estudiante_nombre" @selected($ordenar === 'estudiante_nombre')>Nombre</option>
+                @endif
+                <option value="unidad" @selected($ordenar === 'unidad')>Unidad</option>
                 <option value="calificacion" @selected($ordenar === 'calificacion')>Calificación</option>
                 <option value="inasistencias" @selected($ordenar === 'inasistencias')>Faltas</option>
             </select>
 
             <select name="direccion" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-slate-900 focus:outline-none">
-                <option value="asc" @selected($direccion === 'asc')>Ascendente (A-Z / Menor a mayor)</option>
-                <option value="desc" @selected($direccion === 'desc')>Descendente (Z-A / Mayor a menor)</option>
+                <option value="asc" @selected($direccion === 'asc')>{{ $esProfesor ? 'Ascendente (A-Z / Menor a mayor)' : 'Menor a mayor' }}</option>
+                <option value="desc" @selected($direccion === 'desc')>{{ $esProfesor ? 'Descendente (Z-A / Mayor a menor)' : 'Mayor a menor' }}</option>
             </select>
 
             <button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-100">
@@ -57,8 +70,17 @@
                 <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
                     <tr>
                         <th class="py-3 px-4">
-                            <a href="{{ $urlOrden('estudiante_nombre') }}" class="hover:text-slate-900">
-                                Alumno{{ $flecha('estudiante_nombre') }}
+                            @if ($esProfesor)
+                                <a href="{{ $urlOrden('estudiante_nombre') }}" class="hover:text-slate-900">
+                                    Alumno{{ $flecha('estudiante_nombre') }}
+                                </a>
+                            @else
+                                Alumno
+                            @endif
+                        </th>
+                        <th class="py-3 px-4">
+                            <a href="{{ $urlOrden('unidad') }}" class="hover:text-slate-900">
+                                Unidad{{ $flecha('unidad') }}
                             </a>
                         </th>
                         <th class="py-3 px-4">
@@ -81,6 +103,7 @@
                     @forelse ($calificaciones as $item)
                         <tr class="hover:bg-slate-50">
                             <td class="py-3 px-4 font-medium text-slate-900">{{ $item->estudiante_nombre }}</td>
+                            <td class="py-3 px-4 text-slate-700">Unidad {{ $item->unidad }}</td>
                             <td class="py-3 px-4 text-slate-700">{{ $item->inasistencias }}</td>
                             <td class="py-3 px-4 font-mono font-medium text-slate-900">{{ number_format((float) $item->calificacion, 2) }}</td>
                             <td class="py-3 px-4">
@@ -108,7 +131,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $esProfesor ? 5 : 4 }}" class="py-8 text-center text-slate-500">
+                            <td colspan="{{ $esProfesor ? 6 : 5 }}" class="py-8 text-center text-slate-500">
                                 No hay registros académicos.
                             </td>
                         </tr>

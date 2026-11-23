@@ -9,10 +9,10 @@
             @csrf
 
             <div>
-                <label for="alumno_user_id" class="block text-sm font-medium text-slate-700 mb-1">Cuenta de alumno (opcional)</label>
-                <select id="alumno_user_id" name="alumno_user_id"
+                <label for="alumno_user_id" class="block text-sm font-medium text-slate-700 mb-1">Alumno</label>
+                <select id="alumno_user_id" name="alumno_user_id" required
                         class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-900 focus:outline-none">
-                    <option value="">-- Sin cuenta vinculada --</option>
+                    <option value="">-- Selecciona un alumno --</option>
                     @foreach ($alumnos as $alumno)
                         <option value="{{ $alumno->id }}" @selected((string) old('alumno_user_id') === (string) $alumno->id)>
                             {{ $alumno->name }} ({{ $alumno->email }})
@@ -21,16 +21,20 @@
                 </select>
             </div>
 
-            <div>
-                <label for="estudiante_nombre" class="block text-sm font-medium text-slate-700 mb-1">Nombre del alumno</label>
-                <input id="estudiante_nombre" type="text" name="estudiante_nombre" value="{{ old('estudiante_nombre') }}" required
-                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                    <label for="inasistencias" class="block text-sm font-medium text-slate-700 mb-1">Faltas</label>
-                    <input id="inasistencias" type="number" name="inasistencias" value="{{ old('inasistencias', 0) }}" min="0" max="100" required
+                    <label for="unidad" class="block text-sm font-medium text-slate-700 mb-1">Unidad (1 - 4)</label>
+                    <select id="unidad" name="unidad" required
+                            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-900 focus:outline-none">
+                        @foreach ([1, 2, 3, 4] as $u)
+                            <option value="{{ $u }}" @selected((int) old('unidad', 1) === $u)>Unidad {{ $u }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="inasistencias" class="block text-sm font-medium text-slate-700 mb-1">Faltas (0 - 5)</label>
+                    <input id="inasistencias" type="number" name="inasistencias" value="{{ old('inasistencias', 0) }}" min="0" max="5" required
                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none">
                 </div>
 
